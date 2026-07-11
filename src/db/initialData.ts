@@ -725,3 +725,33 @@ export const SEED_ORDERS: Order[] = [
   { id: 'ord-102', schoolId: 'school-hogwarts', schoolName: 'Hogwarts School', planId: 'plan-enterprise', planName: 'Enterprise Plan', amount: 399, billingCycle: 'monthly', status: 'paid', paymentMethod: 'Stripe Card', createdAt: '2026-07-05T08:30:00Z' },
   { id: 'ord-103', schoolId: 'school-springfield', schoolName: 'Springfield Academy', planId: 'plan-pro', planName: 'Professional Plan', amount: 199, billingCycle: 'monthly', status: 'paid', paymentMethod: 'Stripe Card', createdAt: '2026-06-01T12:00:00Z' }
 ];
+
+export interface Holiday {
+  id: string;
+  schoolId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+export const SEED_HOLIDAYS: Holiday[] = [
+  { id: 'hol-1', schoolId: 'school-springfield', name: 'Summer Vacation Break', startDate: '2026-06-15', endDate: '2026-07-31', description: 'Annual summer break for all classes and faculty staff.' },
+  { id: 'hol-2', schoolId: 'school-springfield', name: 'Thanksgiving Recess', startDate: '2026-11-26', endDate: '2026-11-28', description: 'National Thanksgiving holiday weekend recess.' },
+  { id: 'hol-3', schoolId: 'school-springfield', name: 'Christmas & Winter Holidays', startDate: '2026-12-20', endDate: '2027-01-03', description: 'Winter break and Christmas celebrations.' }
+];
+
+export interface SchoolEvent {
+  id: string;
+  schoolId: string;
+  title: string;
+  date: string;
+  venue: string;
+  description: string;
+}
+
+export const SEED_EVENTS: SchoolEvent[] = [
+  { id: 'evt-1', schoolId: 'school-springfield', title: 'Annual Science Fair', date: '2026-07-20', venue: 'School Auditorium', description: 'Interactive project displays and physics lab models presentation.' },
+  { id: 'evt-2', schoolId: 'school-springfield', title: 'Parent-Teacher Meeting (Term 1)', date: '2026-08-10', venue: 'Main Classrooms', description: 'Discussion on midterm exam cards and progress metrics.' },
+  { id: 'evt-3', schoolId: 'school-springfield', title: 'Inter-School Soccer Tournament', date: '2026-09-05', venue: 'Sports Ground Arena', description: 'Regional championship series matches.' }
+];

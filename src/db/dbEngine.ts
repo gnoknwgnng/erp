@@ -25,7 +25,9 @@ const KEYS = {
   TICKETS: 'erp_tickets',
   COUPONS: 'erp_coupons',
   WISHES: 'erp_wishes',
-  ORDERS: 'erp_orders'
+  ORDERS: 'erp_orders',
+  HOLIDAYS: 'erp_holidays',
+  EVENTS: 'erp_events'
 };
 
 // Initialize DB with seed data if empty
@@ -55,6 +57,8 @@ export function initDatabase() {
     localStorage.setItem(KEYS.COUPONS, JSON.stringify(Seed.SEED_COUPONS));
     localStorage.setItem(KEYS.WISHES, JSON.stringify(Seed.SEED_WISHES));
     localStorage.setItem(KEYS.ORDERS, JSON.stringify(Seed.SEED_ORDERS));
+    localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(Seed.SEED_HOLIDAYS));
+    localStorage.setItem(KEYS.EVENTS, JSON.stringify(Seed.SEED_EVENTS));
   }
 }
 
@@ -401,12 +405,11 @@ export function markAttendance(schoolId: string, records: Omit<Seed.Attendance, 
 export function collectFee(schoolId: string, studentId: string, categoryId: string, amount: number, method: string) {
   const payments = getTable<Seed.FeePayment>(KEYS.FEE_PAYMENTS);
   const idx = payments.findIndex(p => p.schoolId === schoolId && p.studentId === studentId && p.categoryId === categoryId);
-  
+  const category = getTable<Seed.FeeCategory>(KEYS.FEE_CATEGORIES).find(c => c.id === categoryId);
+  const totalAmount = category ? category.amount : amount;
+
   if (idx !== -1) {
-    const category = getTable<Seed.FeeCategory>(KEYS.FEE_CATEGORIES).find(c => c.id === categoryId);
-    const totalAmount = category ? category.amount : amount;
     const currentPaid = payments[idx].amountPaid + amount;
-    
     payments[idx].amountPaid = currentPaid;
     payments[idx].paymentMethod = method;
     payments[idx].status = currentPaid >= totalAmount ? 'paid' : 'partial';
@@ -416,8 +419,23 @@ export function collectFee(schoolId: string, studentId: string, categoryId: stri
     saveTable(KEYS.FEE_PAYMENTS, payments);
     addAuditLog(schoolId, 'accountant', 'Finance Officer', `Collected fee ${amount} for student ${studentId} under category ${categoryId}`);
     return payments[idx];
+  } else {
+    const newPayment: Seed.FeePayment = {
+      id: `pay-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      schoolId,
+      studentId,
+      categoryId,
+      amountPaid: amount,
+      paymentMethod: method,
+      status: amount >= totalAmount ? 'paid' : 'partial',
+      date: new Date().toISOString().split('T')[0],
+      transactionId: `TXN-${Date.now()}-COL`
+    };
+    payments.push(newPayment);
+    saveTable(KEYS.FEE_PAYMENTS, payments);
+    addAuditLog(schoolId, 'accountant', 'Finance Officer', `Collected fee ${amount} for student ${studentId} under category ${categoryId}`);
+    return newPayment;
   }
-  return null;
 }
 
 // Exam marks Entry
@@ -748,4 +766,56 @@ export function createOrder(order: Omit<Seed.Order, 'id' | 'createdAt'>): Seed.O
   orders.unshift(newOrder);
   saveTable(KEYS.ORDERS, orders);
   return orders;
+}
+
+// Holidays operations (School Admin)
+export function getHolidays(schoolId: string): Seed.Holiday[] {
+  return getTable<Seed.Holiday>(KEYS.HOLIDAYS).filter(h => h.schoolId === schoolId);
+}
+
+export function createHoliday(schoolId: string, holiday: Omit<Seed.Holiday, 'id' | 'schoolId'>): Seed.Holiday[] {
+  const holidays = getTable<Seed.Holiday>(KEYS.HOLIDAYS);
+  const newHoliday: Seed.Holiday = {
+    ...holiday,
+    id: `hol-${Date.now()}`,
+    schoolId
+  };
+  holidays.push(newHoliday);
+  saveTable(KEYS.HOLIDAYS, holidays);
+  addAuditLog(schoolId, 'admin', 'School Admin', `Scheduled new holiday: ${holiday.name}`);
+  return holidays.filter(h => h.schoolId === schoolId);
+}
+
+export function deleteHoliday(schoolId: string, holidayId: string): Seed.Holiday[] {
+  const holidays = getTable<Seed.Holiday>(KEYS.HOLIDAYS);
+  const filtered = holidays.filter(h => h.id !== holidayId);
+  saveTable(KEYS.HOLIDAYS, filtered);
+  addAuditLog(schoolId, 'admin', 'School Admin', `Removed holiday ID: ${holidayId}`);
+  return filtered.filter(h => h.schoolId === schoolId);
+}
+
+// Events operations (School Admin)
+export function getEvents(schoolId: string): Seed.SchoolEvent[] {
+  return getTable<Seed.SchoolEvent>(KEYS.EVENTS).filter(e => e.schoolId === schoolId);
+}
+
+export function createEvent(schoolId: string, event: Omit<Seed.SchoolEvent, 'id' | 'schoolId'>): Seed.SchoolEvent[] {
+  const events = getTable<Seed.SchoolEvent>(KEYS.EVENTS);
+  const newEvent: Seed.SchoolEvent = {
+    ...event,
+    id: `evt-${Date.now()}`,
+    schoolId
+  };
+  events.push(newEvent);
+  saveTable(KEYS.EVENTS, events);
+  addAuditLog(schoolId, 'admin', 'School Admin', `Scheduled new event: ${event.title}`);
+  return events.filter(e => e.schoolId === schoolId);
+}
+
+export function deleteEvent(schoolId: string, eventId: string): Seed.SchoolEvent[] {
+  const events = getTable<Seed.SchoolEvent>(KEYS.EVENTS);
+  const filtered = events.filter(e => e.id !== eventId);
+  saveTable(KEYS.EVENTS, filtered);
+  addAuditLog(schoolId, 'admin', 'School Admin', `Removed event ID: ${eventId}`);
+  return filtered.filter(e => e.schoolId === schoolId);
 }

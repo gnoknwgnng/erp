@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   AlertCircle, Plus, FileText, 
-  DollarSign, FileDown
+  DollarSign, FileDown, Trash2
 } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Table } from '../../components/Table';
@@ -13,7 +13,9 @@ import {
   getSchoolData, getExtendedStudents, getExtendedTeachers, 
   getExtendedParents, admitStudent, addTeacher, collectFee, 
   enterMarks, updateSchoolSettings,
-  getAuditLogs, addAuditLog, markAttendance
+  getAuditLogs, addAuditLog, markAttendance,
+  getHolidays, createHoliday, deleteHoliday,
+  getEvents, createEvent, deleteEvent
 } from '../../db/dbEngine';
 import type { School, User } from '../../db/initialData';
 
@@ -68,6 +70,26 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
   const [feeCollectPayMethod, setFeeCollectPayMethod] = useState('Cash');
   const [showReceiptDetail, setShowReceiptDetail] = useState<any | null>(null);
 
+  // Holidays State
+  const [holidays, setHolidays] = useState<any[]>([]);
+  const [showAddHoliday, setShowAddHoliday] = useState(false);
+  const [holidayForm, setHolidayForm] = useState({
+    name: '',
+    startDate: '',
+    endDate: '',
+    description: ''
+  });
+
+  // Events State
+  const [events, setEvents] = useState<any[]>([]);
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [eventForm, setEventForm] = useState({
+    title: '',
+    date: '',
+    venue: '',
+    description: ''
+  });
+
   // Focus entity states
   const [activeStudent, setActiveStudent] = useState<any | null>(null);
   const [activeTeacher, setActiveTeacher] = useState<any | null>(null);
@@ -113,6 +135,8 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
     setRoutes(getSchoolData('erp_routes', schoolId));
     setHostels(getSchoolData('erp_hostels', schoolId));
     setAuditLogs(getAuditLogs(schoolId));
+    setHolidays(getHolidays(schoolId));
+    setEvents(getEvents(schoolId));
   };
 
   useEffect(() => {
@@ -178,6 +202,52 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
     loadERPData();
   };
 
+
+  // Handle Holidays CRUD
+  const handleHolidaySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!holidayForm.name.trim() || !holidayForm.startDate) return alert('Name and start date are required');
+    const updated = createHoliday(schoolId, {
+      name: holidayForm.name,
+      startDate: holidayForm.startDate,
+      endDate: holidayForm.endDate || holidayForm.startDate,
+      description: holidayForm.description
+    });
+    setHolidays(updated);
+    setShowAddHoliday(false);
+    setHolidayForm({ name: '', startDate: '', endDate: '', description: '' });
+    alert('Holiday scheduled successfully!');
+  };
+
+  const handleDeleteHoliday = (id: string) => {
+    if (confirm('Are you sure you want to remove this scheduled holiday?')) {
+      const updated = deleteHoliday(schoolId, id);
+      setHolidays(updated);
+    }
+  };
+
+  // Handle Events CRUD
+  const handleEventSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!eventForm.title.trim() || !eventForm.date) return alert('Title and date are required');
+    const updated = createEvent(schoolId, {
+      title: eventForm.title,
+      date: eventForm.date,
+      venue: eventForm.venue || 'School Campus',
+      description: eventForm.description
+    });
+    setEvents(updated);
+    setShowAddEvent(false);
+    setEventForm({ title: '', date: '', venue: '', description: '' });
+    alert('Event scheduled successfully!');
+  };
+
+  const handleDeleteEvent = (id: string) => {
+    if (confirm('Are you sure you want to remove this scheduled event?')) {
+      const updated = deleteEvent(schoolId, id);
+      setEvents(updated);
+    }
+  };
 
   // Handle Marks Entry
   const handleMarksSubmit = (e: React.FormEvent) => {
@@ -682,6 +752,85 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
                   key: 'timetable',
                   title: 'Schedule Slots',
                   render: (row) => row.timetable.map((slot: any) => `${slot.day}: ${slot.time} (${slot.room})`).join(' | ')
+                }
+              ]}
+            />
+          </div>
+        </Card>
+      )}
+
+      {activeTab === 'holidays' && (
+        <Card 
+          title="School Calendar Holidays" 
+          subtitle="Schedule academic vacation breaks, national holidays, and school calendar events."
+          extra={
+            <Button size="sm" style={{ cursor: 'pointer' }} onClick={() => setShowAddHoliday(true)}>
+              <Plus size={14} style={{ marginRight: '4px' }} /> Add Holiday
+            </Button>
+          }
+        >
+          <div style={{ marginTop: '16px' }}>
+            <Table
+              data={holidays}
+              columns={[
+                { key: 'name', title: 'Holiday Name' },
+                {
+                  key: 'dates',
+                  title: 'Duration Period',
+                  render: (row) => {
+                    const start = new Date(row.startDate).toLocaleDateString();
+                    const end = new Date(row.endDate).toLocaleDateString();
+                    return start === end ? start : `${start} to ${end}`;
+                  }
+                },
+                { key: 'description', title: 'Description Details' },
+                {
+                  key: 'actions',
+                  title: 'Actions',
+                  align: 'right',
+                  render: (row) => (
+                    <Button size="sm" variant="ghost" style={{ cursor: 'pointer' }} onClick={() => handleDeleteHoliday(row.id)}>
+                      <Trash2 size={13} color="var(--error-color)" />
+                    </Button>
+                  )
+                }
+              ]}
+            />
+          </div>
+        </Card>
+      )}
+
+      {activeTab === 'events' && (
+        <Card 
+          title="School Calendar Events" 
+          subtitle="Schedule annual day meets, academic exhibitions, parent-teacher reviews, and extracurricular competitions."
+          extra={
+            <Button size="sm" style={{ cursor: 'pointer' }} onClick={() => setShowAddEvent(true)}>
+              <Plus size={14} style={{ marginRight: '4px' }} /> Add Event
+            </Button>
+          }
+        >
+          <div style={{ marginTop: '16px' }}>
+            <Table
+              data={events}
+              columns={[
+                { key: 'title', title: 'Event Title' },
+                {
+                  key: 'date',
+                  title: 'Date of Event',
+                  render: (row) => new Date(row.date).toLocaleDateString()
+                },
+                { key: 'venue', title: 'Venue Location' },
+                { key: 'description', title: 'Description Notes' },
+                {
+                  key: 'actions',
+                  title: 'Actions',
+                  align: 'right',
+                  render: (row) => (
+                    <Button size="sm" variant="ghost" style={{ cursor: 'pointer' }} onClick={() => handleDeleteEvent(row.id)}>
+                      <Trash2 size={13} color="var(--error-color)" />
+                    </Button>
+                  )
                 }
               ]}
             />
@@ -1297,6 +1446,94 @@ Payment Mode: ${showReceiptDetail.paymentMethod}
             </Button>
           </div>
         )}
+      </Dialog>
+
+      {/* ADD HOLIDAY DIALOG */}
+      <Dialog
+        isOpen={showAddHoliday}
+        onClose={() => setShowAddHoliday(false)}
+        title="Schedule Institutional Holiday"
+        footer={
+          <>
+            <Button variant="outline" style={{ cursor: 'pointer' }} onClick={() => setShowAddHoliday(false)}>Cancel</Button>
+            <Button style={{ cursor: 'pointer' }} onClick={handleHolidaySubmit}>Schedule Event</Button>
+          </>
+        }
+      >
+        <form onSubmit={handleHolidaySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <Input 
+            label="Holiday Name / Title" 
+            placeholder="e.g. Autumn Break"
+            value={holidayForm.name} 
+            onChange={(e) => setHolidayForm(prev => ({ ...prev, name: e.target.value }))}
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <Input 
+              label="Start Date" 
+              type="date" 
+              value={holidayForm.startDate} 
+              onChange={(e) => setHolidayForm(prev => ({ ...prev, startDate: e.target.value }))}
+            />
+            <Input 
+              label="End Date" 
+              type="date" 
+              value={holidayForm.endDate} 
+              onChange={(e) => setHolidayForm(prev => ({ ...prev, endDate: e.target.value }))}
+            />
+          </div>
+          <Input 
+            label="Event Description" 
+            textarea={true}
+            rows={3}
+            placeholder="Brief notes for students and parents..."
+            value={holidayForm.description} 
+            onChange={(e) => setHolidayForm(prev => ({ ...prev, description: e.target.value }))}
+          />
+        </form>
+      </Dialog>
+
+      {/* ADD EVENT DIALOG */}
+      <Dialog
+        isOpen={showAddEvent}
+        onClose={() => setShowAddEvent(false)}
+        title="Schedule Institutional Event"
+        footer={
+          <>
+            <Button variant="outline" style={{ cursor: 'pointer' }} onClick={() => setShowAddEvent(false)}>Cancel</Button>
+            <Button style={{ cursor: 'pointer' }} onClick={handleEventSubmit}>Schedule Event</Button>
+          </>
+        }
+      >
+        <form onSubmit={handleEventSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <Input 
+            label="Event Title" 
+            placeholder="e.g. Science Fair Exhibition"
+            value={eventForm.title} 
+            onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <Input 
+              label="Event Date" 
+              type="date" 
+              value={eventForm.date} 
+              onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))}
+            />
+            <Input 
+              label="Venue Location" 
+              placeholder="e.g. Auditorium Hall"
+              value={eventForm.venue} 
+              onChange={(e) => setEventForm(prev => ({ ...prev, venue: e.target.value }))}
+            />
+          </div>
+          <Input 
+            label="Event Description" 
+            textarea={true}
+            rows={3}
+            placeholder="Details about program schedule, timings, etc..."
+            value={eventForm.description} 
+            onChange={(e) => setEventForm(prev => ({ ...prev, description: e.target.value }))}
+          />
+        </form>
       </Dialog>
     </div>
   );

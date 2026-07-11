@@ -3,7 +3,7 @@ import {
   Menu, Bell, Search, Sun, Moon, LogOut, LayoutDashboard, Monitor, 
   CreditCard, Settings, GraduationCap, Users, BookOpen, Clock, FileText, 
   Book, Truck, Home, Package, DollarSign, MessageSquare, Clipboard, 
-  HelpCircle, UserCheck, ShieldAlert, Tag, Gift, ShoppingCart
+  HelpCircle, UserCheck, ShieldAlert, Tag, Gift, ShoppingCart, Calendar
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import type { School, User } from '../db/initialData';
@@ -65,6 +65,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'teachers', label: 'Teachers Hub', icon: <UserCheck size={18} /> },
           { id: 'academics', label: 'Academics & Classes', icon: <BookOpen size={18} /> },
           { id: 'attendance', label: 'Attendance Console', icon: <Clock size={18} /> },
+          { id: 'holidays', label: 'School Holidays', icon: <Calendar size={18} /> },
+          { id: 'events', label: 'School Events', icon: <Gift size={18} /> },
           { id: 'timetable', label: 'Timetable Planner', icon: <Clipboard size={18} /> },
           { id: 'fees', label: 'Fee Management', icon: <DollarSign size={18} /> },
           { id: 'exams', label: 'Examinations & Marks', icon: <FileText size={18} /> },
