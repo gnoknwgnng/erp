@@ -3,7 +3,7 @@ import { ArrowLeft, KeySquare } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Card } from '../../components/Card';
-import { authenticate, type AuthSession } from '../../db/dbEngine';
+import { authenticate, resetDatabase, type AuthSession } from '../../db/dbEngine';
 
 interface LoginPortalProps {
   onLoginSuccess: (session: AuthSession) => void;
@@ -298,10 +298,26 @@ export const LoginPortal: React.FC<LoginPortalProps> = ({ onLoginSuccess, onBack
               <Button size="sm" variant="ghost" style={{ fontSize: '11px', padding: '6px' }} onClick={() => prefillAccount('student', 'sfstudent', 'student123')}>
                 Student (Springfield)
               </Button>
-              <div style={{ gridColumn: 'span 2' }}>
+              <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <Button size="sm" variant="ghost" style={{ fontSize: '11px', padding: '6px', width: '100%' }} onClick={() => prefillAccount('parent', 'sfparent', 'parent123')}>
                   Parent (Springfield)
                 </Button>
+                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '8px', display: 'flex', justifyContent: 'center' }}>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    style={{ fontSize: '10.5px', padding: '4px 10px', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                    onClick={() => {
+                      if (confirm('Are you sure you want to reset all data changes and re-load default school database seeds?')) {
+                        resetDatabase();
+                        alert('Database successfully re-seeded with demo records!');
+                        window.location.reload();
+                      }
+                    }}
+                  >
+                    Reset & Re-Seed Demo Data
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

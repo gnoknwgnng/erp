@@ -52,6 +52,12 @@ export function initDatabase() {
   }
 }
 
+// Clear all erp keys and reseed database
+export function resetDatabase() {
+  Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+  initDatabase();
+}
+
 // Generic Storage Handlers
 function getTable<T>(key: string): T[] {
   initDatabase();
