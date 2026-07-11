@@ -388,6 +388,52 @@ export const SEED_USERS: User[] = [
     mfaEnabled: false,
     createdAt: '2026-01-17T11:30:00Z'
   },
+  {
+    id: 'user-sf-teacher-edna',
+    schoolId: 'school-springfield',
+    username: 'ednakrabappel',
+    role: 'teacher',
+    name: 'Edna Krabappel',
+    email: 'edna@springfield.edu',
+    phone: '+1-555-0145',
+    passwordHash: 'teacher123',
+    mfaEnabled: false,
+    createdAt: '2026-01-18T09:00:00Z'
+  },
+  {
+    id: 'user-sf-teacher-largo',
+    schoolId: 'school-springfield',
+    username: 'deweylargo',
+    role: 'teacher',
+    name: 'Dewey Largo',
+    email: 'largo@springfield.edu',
+    phone: '+1-555-0146',
+    passwordHash: 'teacher123',
+    mfaEnabled: false,
+    createdAt: '2026-01-19T09:00:00Z'
+  },
+  {
+    id: 'user-sf-student-bart',
+    schoolId: 'school-springfield',
+    username: 'bartsimpson',
+    role: 'student',
+    name: 'Bart Simpson',
+    email: 'bart@springfield.edu',
+    passwordHash: 'student123',
+    mfaEnabled: false,
+    createdAt: '2026-01-20T09:00:00Z'
+  },
+  {
+    id: 'user-sf-student-milhouse',
+    schoolId: 'school-springfield',
+    username: 'milhouse',
+    role: 'student',
+    name: 'Milhouse Van Houten',
+    email: 'milhouse@springfield.edu',
+    passwordHash: 'student123',
+    mfaEnabled: false,
+    createdAt: '2026-01-21T09:00:00Z'
+  },
   // Hogwarts Admin
   {
     id: 'user-hw-admin',
@@ -417,7 +463,42 @@ export const SEED_STUDENTS: Student[] = [
     bloodGroup: 'A+',
     medicalDetails: 'None',
     emergencyContact: 'Homer Simpson (+1-555-0133)',
-    status: 'active'
+    status: 'active',
+    medium: 'English'
+  },
+  {
+    id: 'student-bart',
+    schoolId: 'school-springfield',
+    userId: 'user-sf-student-bart',
+    admissionNo: 'ADM-2026-0002',
+    rollNo: '28',
+    parentId: 'parent-homer',
+    classId: 'class-10b',
+    sectionId: 'section-b',
+    dob: '2012-02-23',
+    gender: 'Male',
+    bloodGroup: 'O+',
+    medicalDetails: 'None',
+    emergencyContact: 'Homer Simpson (+1-555-0133)',
+    status: 'active',
+    medium: 'English'
+  },
+  {
+    id: 'student-milhouse',
+    schoolId: 'school-springfield',
+    userId: 'user-sf-student-milhouse',
+    admissionNo: 'ADM-2026-0003',
+    rollNo: '12',
+    parentId: 'parent-homer',
+    classId: 'class-9a',
+    sectionId: 'section-a',
+    dob: '2012-07-01',
+    gender: 'Male',
+    bloodGroup: 'B-',
+    medicalDetails: 'Requires glasses',
+    emergencyContact: 'Luann Van Houten (+1-555-0188)',
+    status: 'active',
+    medium: 'English'
   }
 ];
 
@@ -430,7 +511,7 @@ export const SEED_PARENTS: Parent[] = [
     income: '$45,000',
     address: '742 Evergreen Terrace, Springfield',
     emergencyContact: 'Marge Simpson (+1-555-0134)',
-    childrenIds: ['student-lisa']
+    childrenIds: ['student-lisa', 'student-bart', 'student-milhouse']
   }
 ];
 
@@ -442,6 +523,24 @@ export const SEED_TEACHERS: Teacher[] = [
     qualification: 'Master of Arts in Education',
     experience: '8 years',
     salary: 4200,
+    status: 'active'
+  },
+  {
+    id: 'teacher-edna',
+    schoolId: 'school-springfield',
+    userId: 'user-sf-teacher-edna',
+    qualification: 'Bachelor of Education',
+    experience: '12 years',
+    salary: 4500,
+    status: 'active'
+  },
+  {
+    id: 'teacher-largo',
+    schoolId: 'school-springfield',
+    userId: 'user-sf-teacher-largo',
+    qualification: 'Master of Music',
+    experience: '15 years',
+    salary: 4000,
     status: 'active'
   }
 ];
@@ -460,6 +559,27 @@ export const SEED_CLASSES: ClassSection[] = [
     className: 'Grade 10',
     sectionName: 'B',
     classTeacherId: 'teacher-hoover'
+  },
+  {
+    id: 'class-9a',
+    schoolId: 'school-springfield',
+    className: 'Grade 9',
+    sectionName: 'A',
+    classTeacherId: 'teacher-edna'
+  },
+  {
+    id: 'class-9b',
+    schoolId: 'school-springfield',
+    className: 'Grade 9',
+    sectionName: 'B',
+    classTeacherId: 'teacher-edna'
+  },
+  {
+    id: 'class-8a',
+    schoolId: 'school-springfield',
+    className: 'Grade 8',
+    sectionName: 'A',
+    classTeacherId: 'teacher-largo'
   }
 ];
 
@@ -496,11 +616,26 @@ export const SEED_ALLOCATIONS: SubjectAllocation[] = [
 ];
 
 export const SEED_ATTENDANCE: Attendance[] = [
+  // Lisa Simpson (Grade 10-A)
   { id: 'att-1', schoolId: 'school-springfield', studentId: 'student-lisa', date: '2026-07-06', status: 'present' },
   { id: 'att-2', schoolId: 'school-springfield', studentId: 'student-lisa', date: '2026-07-07', status: 'present' },
   { id: 'att-3', schoolId: 'school-springfield', studentId: 'student-lisa', date: '2026-07-08', status: 'present' },
   { id: 'att-4', schoolId: 'school-springfield', studentId: 'student-lisa', date: '2026-07-09', status: 'late' },
-  { id: 'att-5', schoolId: 'school-springfield', studentId: 'student-lisa', date: '2026-07-10', status: 'present' }
+  { id: 'att-5', schoolId: 'school-springfield', studentId: 'student-lisa', date: '2026-07-10', status: 'present' },
+
+  // Bart Simpson (Grade 10-B)
+  { id: 'att-6', schoolId: 'school-springfield', studentId: 'student-bart', date: '2026-07-06', status: 'absent' },
+  { id: 'att-7', schoolId: 'school-springfield', studentId: 'student-bart', date: '2026-07-07', status: 'late' },
+  { id: 'att-8', schoolId: 'school-springfield', studentId: 'student-bart', date: '2026-07-08', status: 'present' },
+  { id: 'att-9', schoolId: 'school-springfield', studentId: 'student-bart', date: '2026-07-09', status: 'present' },
+  { id: 'att-10', schoolId: 'school-springfield', studentId: 'student-bart', date: '2026-07-10', status: 'absent' },
+
+  // Milhouse Van Houten (Grade 9-A)
+  { id: 'att-11', schoolId: 'school-springfield', studentId: 'student-milhouse', date: '2026-07-06', status: 'present' },
+  { id: 'att-12', schoolId: 'school-springfield', studentId: 'student-milhouse', date: '2026-07-07', status: 'present' },
+  { id: 'att-13', schoolId: 'school-springfield', studentId: 'student-milhouse', date: '2026-07-08', status: 'absent' },
+  { id: 'att-14', schoolId: 'school-springfield', studentId: 'student-milhouse', date: '2026-07-09', status: 'present' },
+  { id: 'att-15', schoolId: 'school-springfield', studentId: 'student-milhouse', date: '2026-07-10', status: 'late' }
 ];
 
 export const SEED_EXAMS: Exam[] = [

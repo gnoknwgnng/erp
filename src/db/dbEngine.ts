@@ -32,7 +32,9 @@ const KEYS = {
 
 // Initialize DB with seed data if empty
 export function initDatabase() {
-  if (!localStorage.getItem(KEYS.PLANS)) {
+  const needsReseed = !localStorage.getItem(KEYS.PLANS) || !localStorage.getItem('erp_reseed_v2');
+  if (needsReseed) {
+    localStorage.setItem('erp_reseed_v2', 'true');
     localStorage.setItem(KEYS.PLANS, JSON.stringify(Seed.SEED_PLANS));
     localStorage.setItem(KEYS.SCHOOLS, JSON.stringify(Seed.SEED_SCHOOLS));
     localStorage.setItem(KEYS.USERS, JSON.stringify(Seed.SEED_USERS));

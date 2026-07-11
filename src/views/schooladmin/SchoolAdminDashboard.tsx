@@ -48,6 +48,7 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
   const [routes, setRoutes] = useState<any[]>([]);
   const [hostels, setHostels] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [attendance, setAttendance] = useState<any[]>([]);
 
   // Search Filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,6 +95,14 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
   const [parentSearchQuery, setParentSearchQuery] = useState('');
   const [parentClassFilter, setParentClassFilter] = useState('');
   const [parentSectionFilter, setParentSectionFilter] = useState('');
+
+  // Attendance Console Filters & States
+  const [viewAttClassId, setViewAttClassId] = useState('');
+  const [viewAttDate, setViewAttDate] = useState('');
+  const [showMarkAttendanceModal, setShowMarkAttendanceModal] = useState(false);
+  const [markClassId, setMarkClassId] = useState('');
+  const [markDate, setMarkDate] = useState(new Date().toISOString().split('T')[0]);
+  const [markRecords, setMarkRecords] = useState<Record<string, 'present' | 'absent' | 'late'>>({});
 
   // Focus entity states
   const [activeStudent, setActiveStudent] = useState<any | null>(null);
@@ -142,6 +151,7 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
     setAuditLogs(getAuditLogs(schoolId));
     setHolidays(getHolidays(schoolId));
     setEvents(getEvents(schoolId));
+    setAttendance(getSchoolData('erp_attendance', schoolId));
   };
 
   useEffect(() => {
@@ -255,6 +265,21 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
       const updated = deleteEvent(schoolId, id);
       setEvents(updated);
     }
+  };
+
+  // Handle Mark Attendance
+  const handleMarkAttendanceSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!markClassId || !markDate) return alert('Class and Date are required');
+    const payload = Object.entries(markRecords).map(([studentId, status]) => ({
+      studentId,
+      date: markDate,
+      status
+    }));
+    markAttendance(schoolId, payload);
+    setShowMarkAttendanceModal(false);
+    loadERPData();
+    alert(`Attendance marked successfully for class on ${markDate}!`);
   };
 
   // Handle Marks Entry
@@ -828,6 +853,109 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
           </div>
         </Card>
       )}
+
+      {activeTab === 'attendance' && (() => {
+        const presents = attendance.filter(a => a.status === 'present').length;
+        const lates = attendance.filter(a => a.status === 'late').length;
+        const totalLogs = attendance.length;
+        const totalRate = totalLogs > 0 ? Math.round(((presents + lates * 0.75) / totalLogs) * 100) : 100;
+
+        const filteredLogs = attendance.filter(log => {
+          const std = students.find(s => s.id === log.studentId);
+          if (!std) return false;
+          if (viewAttClassId && std.classId !== viewAttClassId) return false;
+          if (viewAttDate && log.date !== viewAttDate) return false;
+          return true;
+        }).map(log => {
+          const std = students.find(s => s.id === log.studentId);
+          const cls = std ? classes.find(c => c.id === std.classId) : null;
+          return {
+            ...log,
+            studentName: std ? std.name : 'Unknown Student',
+            className: cls ? `${cls.className}-${cls.sectionName}` : 'Unknown Class'
+          };
+        });
+
+        return (
+          <Card 
+            title="Attendance registry & metrics console" 
+            subtitle="Track, update, or log institutional attendance rosters."
+            extra={
+              <Button size="sm" style={{ cursor: 'pointer' }} onClick={() => {
+                setMarkRecords({});
+                setShowMarkAttendanceModal(true);
+              }}>
+                <Plus size={14} style={{ marginRight: '4px' }} /> Mark Attendance
+              </Button>
+            }
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginTop: '16px' }}>
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--bg-secondary)', textAlign: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', textTransform: 'uppercase' }}>Average Attendance Rate</span>
+                <strong style={{ fontSize: '24px', color: 'var(--success-color)' }}>{totalRate}%</strong>
+              </div>
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--bg-secondary)', textAlign: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', textTransform: 'uppercase' }}>Present Logs</span>
+                <strong style={{ fontSize: '24px', color: 'var(--primary-color)' }}>{presents}</strong>
+              </div>
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--bg-secondary)', textAlign: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', textTransform: 'uppercase' }}>Late Logs</span>
+                <strong style={{ fontSize: '24px', color: 'var(--warning-color)' }}>{lates}</strong>
+              </div>
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--bg-secondary)', textAlign: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', textTransform: 'uppercase' }}>Absent Logs</span>
+                <strong style={{ fontSize: '24px', color: 'var(--error-color)' }}>{attendance.filter(a => a.status === 'absent').length}</strong>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '20px', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <div style={{ width: '220px' }}>
+                <Input 
+                  label="Filter by Class"
+                  select={true}
+                  value={viewAttClassId}
+                  onChange={(e) => setViewAttClassId(e.target.value)}
+                  options={[
+                    { value: '', label: 'All Classes' },
+                    ...classes.map(c => ({ value: c.id, label: `${c.className}-${c.sectionName}` }))
+                  ]}
+                />
+              </div>
+              <div style={{ width: '220px' }}>
+                <Input 
+                  label="Filter by Date"
+                  type="date"
+                  value={viewAttDate}
+                  onChange={(e) => setViewAttDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginTop: '16px' }}>
+              <Table 
+                data={filteredLogs}
+                columns={[
+                  { key: 'studentName', title: 'Student Name' },
+                  { key: 'className', title: 'Grade Class' },
+                  { key: 'date', title: 'Log Date', render: (row) => new Date(row.date).toLocaleDateString() },
+                  { 
+                    key: 'status', 
+                    title: 'Status',
+                    render: (row) => {
+                      const badgeClass = row.status === 'present' ? 'badge-success' : row.status === 'late' ? 'badge-warning' : 'badge-danger';
+                      return (
+                        <span className={`badge ${badgeClass}`} style={{ textTransform: 'uppercase', fontSize: '10px' }}>
+                          {row.status}
+                        </span>
+                      );
+                    }
+                  }
+                ]}
+              />
+            </div>
+          </Card>
+        );
+      })()}
 
       {activeTab === 'holidays' && (
         <Card 
@@ -1638,6 +1766,104 @@ Payment Mode: ${showReceiptDetail.paymentMethod}
             value={eventForm.description} 
             onChange={(e) => setEventForm(prev => ({ ...prev, description: e.target.value }))}
           />
+        </form>
+      </Dialog>
+
+      {/* MARK ATTENDANCE DIALOG */}
+      <Dialog
+        isOpen={showMarkAttendanceModal}
+        onClose={() => setShowMarkAttendanceModal(false)}
+        title="Mark/Log Attendance Roster"
+        size="lg"
+        footer={
+          <>
+            <Button variant="outline" style={{ cursor: 'pointer' }} onClick={() => setShowMarkAttendanceModal(false)}>Cancel</Button>
+            <Button style={{ cursor: 'pointer' }} onClick={handleMarkAttendanceSubmit}>Submit Roster</Button>
+          </>
+        }
+      >
+        <form onSubmit={handleMarkAttendanceSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <Input 
+              label="Select Class" 
+              select={true} 
+              required={true}
+              value={markClassId} 
+              onChange={(e) => {
+                const cid = e.target.value;
+                setMarkClassId(cid);
+                const classStudents = students.filter(s => s.classId === cid);
+                const records: Record<string, 'present' | 'absent' | 'late'> = {};
+                classStudents.forEach(s => {
+                  const existing = attendance.find(a => a.studentId === s.id && a.date === markDate);
+                  records[s.id] = existing ? existing.status : 'present';
+                });
+                setMarkRecords(records);
+              }}
+              options={[
+                { value: '', label: 'Select Grade Class...' },
+                ...classes.map(c => ({ value: c.id, label: `${c.className}-${c.sectionName}` }))
+              ]}
+            />
+            <Input 
+              label="Date" 
+              type="date" 
+              required={true}
+              value={markDate} 
+              onChange={(e) => {
+                const d = e.target.value;
+                setMarkDate(d);
+                const records = { ...markRecords };
+                Object.keys(records).forEach(sid => {
+                  const existing = attendance.find(a => a.studentId === sid && a.date === d);
+                  if (existing) {
+                    records[sid] = existing.status;
+                  }
+                });
+                setMarkRecords(records);
+              }}
+            />
+          </div>
+
+          {markClassId && (
+            <div style={{ marginTop: '12px' }}>
+              <h4 style={{ fontSize: '13px', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>Class Student Roll Call</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
+                {students.filter(s => s.classId === markClassId).map(s => (
+                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', backgroundColor: 'var(--bg-secondary)' }}>
+                    <div>
+                      <strong>{s.name}</strong>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '8px' }}>Roll No: {s.rollNo}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {(['present', 'absent', 'late'] as const).map(status => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => setMarkRecords(prev => ({ ...prev, [s.id]: status }))}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            textTransform: 'capitalize',
+                            border: '1px solid var(--border-color)',
+                            backgroundColor: markRecords[s.id] === status 
+                              ? (status === 'present' ? 'var(--success-color)' : status === 'late' ? 'var(--warning-color)' : 'var(--error-color)')
+                              : 'var(--bg-tertiary)',
+                            color: markRecords[s.id] === status ? '#ffffff' : 'var(--text-primary)',
+                            fontWeight: markRecords[s.id] === status ? '700' : 'normal'
+                          }}
+                        >
+                          {status}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </form>
       </Dialog>
     </div>
