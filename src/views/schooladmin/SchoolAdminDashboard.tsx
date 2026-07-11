@@ -93,6 +93,7 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
   // Parents Directory Filters
   const [parentSearchQuery, setParentSearchQuery] = useState('');
   const [parentClassFilter, setParentClassFilter] = useState('');
+  const [parentSectionFilter, setParentSectionFilter] = useState('');
 
   // Focus entity states
   const [activeStudent, setActiveStudent] = useState<any | null>(null);
@@ -499,6 +500,9 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
 
       {/* 3. PARENTS DIRECTORY */}
       {activeTab === 'parents' && (() => {
+        const uniqueClassNames = Array.from(new Set(classes.map(c => c.className))).sort();
+        const uniqueSectionNames = Array.from(new Set(classes.map(c => c.sectionName))).sort();
+
         const filteredParents = parents.filter(p => {
           const query = parentSearchQuery.toLowerCase();
           const matchesSearch = 
@@ -506,13 +510,22 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
             p.email.toLowerCase().includes(query) ||
             p.phone.toLowerCase().includes(query);
 
-          if (parentClassFilter) {
-            const matchesClass = students.some(std => 
-              p.childrenIds.includes(std.id) && std.classId === parentClassFilter
-            );
-            return matchesSearch && matchesClass;
+          let matchesClass = true;
+          if (parentClassFilter || parentSectionFilter) {
+            matchesClass = students.some(std => {
+              const studentClass = classes.find(c => c.id === std.classId);
+              if (!studentClass) return false;
+
+              const isChild = p.childrenIds.includes(std.id);
+              if (!isChild) return false;
+
+              if (parentClassFilter && studentClass.className !== parentClassFilter) return false;
+              if (parentSectionFilter && studentClass.sectionName !== parentSectionFilter) return false;
+
+              return true;
+            });
           }
-          return matchesSearch;
+          return matchesSearch && matchesClass;
         });
 
         return (
@@ -525,14 +538,25 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
                   onChange={(e) => setParentSearchQuery(e.target.value)}
                 />
               </div>
-              <div style={{ width: '220px' }}>
+              <div style={{ width: '160px' }}>
                 <Input 
                   select={true}
                   value={parentClassFilter}
                   onChange={(e) => setParentClassFilter(e.target.value)}
                   options={[
-                    { value: '', label: 'All Classes & Sections' },
-                    ...classes.map(c => ({ value: c.id, label: `${c.className}-${c.sectionName}` }))
+                    { value: '', label: 'All Classes' },
+                    ...uniqueClassNames.map(name => ({ value: name, label: name }))
+                  ]}
+                />
+              </div>
+              <div style={{ width: '160px' }}>
+                <Input 
+                  select={true}
+                  value={parentSectionFilter}
+                  onChange={(e) => setParentSectionFilter(e.target.value)}
+                  options={[
+                    { value: '', label: 'All Sections' },
+                    ...uniqueSectionNames.map(name => ({ value: name, label: `Section ${name}` }))
                   ]}
                 />
               </div>
