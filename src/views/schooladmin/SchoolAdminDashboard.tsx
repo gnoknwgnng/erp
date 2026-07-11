@@ -54,10 +54,19 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
   const [showAdmissionWizard, setShowAdmissionWizard] = useState(false);
   const [showAddTeacher, setShowAddTeacher] = useState(false);
   const [showCollectFee, setShowCollectFee] = useState(false);
+  const [showExamTimetable, setShowExamTimetable] = useState(false);
   const [showMarksEntry, setShowMarksEntry] = useState(false);
   const [showTimetableConflict, setShowTimetableConflict] = useState(false);
   const [showIDCard, setShowIDCard] = useState(false);
   const [showPayslip, setShowPayslip] = useState(false);
+
+  // Redesigned Fee Collection State
+  const [feeCollectClassId, setFeeCollectClassId] = useState('');
+  const [feeCollectStudentId, setFeeCollectStudentId] = useState('');
+  const [feeCollectPayCategoryId, setFeeCollectPayCategoryId] = useState<string | null>(null);
+  const [feeCollectPayAmount, setFeeCollectPayAmount] = useState(0);
+  const [feeCollectPayMethod, setFeeCollectPayMethod] = useState('Cash');
+  const [showReceiptDetail, setShowReceiptDetail] = useState<any | null>(null);
 
   // Focus entity states
   const [activeStudent, setActiveStudent] = useState<any | null>(null);
@@ -78,9 +87,6 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
     qualification: 'Bachelor of Science', experience: '3 years', salary: 3200
   });
 
-  const [feeCollectForm, setFeeCollectForm] = useState({
-    studentId: '', categoryId: '', amount: 0, method: 'Cash'
-  });
 
   const [marksForm, setMarksForm] = useState<{ examId: string; subjectId: string; marks: Record<string, number> }>({
     examId: '', subjectId: '', marks: {}
@@ -172,13 +178,6 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
     loadERPData();
   };
 
-  // Handle Fee Collection
-  const handleFeeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    collectFee(schoolId, feeCollectForm.studentId, feeCollectForm.categoryId, Number(feeCollectForm.amount), feeCollectForm.method);
-    setShowCollectFee(false);
-    loadERPData();
-  };
 
   // Handle Marks Entry
   const handleMarksSubmit = (e: React.FormEvent) => {
@@ -243,6 +242,10 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
     );
   };
 
+  const feeCollectFilteredStudents = students.filter(s => s.classId === feeCollectClassId);
+  const selectedCollectStudent = students.find(s => s.id === feeCollectStudentId);
+  const activeCollectStudentClass = classes.find(c => c.id === selectedCollectStudent?.classId);
+
   return (
     <div>
       {/* 1. ERP OVERVIEW DASHBOARD */}
@@ -272,26 +275,15 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
               <Plus size={14} /> Add Teacher
             </Button>
             <Button size="sm" variant="outline" onClick={() => {
-              if (students.length > 0 && feeCategories.length > 0) {
-                setFeeCollectForm({ studentId: students[0].id, categoryId: feeCategories[0].id, amount: feeCategories[0].amount, method: 'Cash' });
-                setShowCollectFee(true);
-              } else {
-                alert('Add students and fee categories first.');
-              }
+              setFeeCollectClassId(classes[0]?.id || '');
+              setFeeCollectStudentId('');
+              setFeeCollectPayCategoryId(null);
+              setShowCollectFee(true);
             }}>
               <DollarSign size={14} /> Collect Fee
             </Button>
-            <Button size="sm" variant="outline" onClick={() => {
-              if (exams.length > 0 && students.length > 0 && subjects.length > 0) {
-                const initialMarks: Record<string, number> = {};
-                students.forEach(s => { initialMarks[s.id] = 85; });
-                setMarksForm({ examId: exams[0].id, subjectId: subjects[0].id, marks: initialMarks });
-                setShowMarksEntry(true);
-              } else {
-                alert('Ensure classes, exams, subjects, and students exist first.');
-              }
-            }}>
-              <FileText size={14} /> Enter Exam Marks
+            <Button size="sm" variant="outline" onClick={() => setShowExamTimetable(true)}>
+              <FileText size={14} /> Exam Timetable
             </Button>
             <Button size="sm" variant="ghost" onClick={simulateBiometricSwipe}>
               Simulate RFID Swipe
@@ -782,19 +774,329 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
       <Dialog
         isOpen={showCollectFee}
         onClose={() => setShowCollectFee(false)}
-        title="Collect Fee Invoice"
+        title="Institutional Fee Collection Console"
+        size="lg"
       >
-        <form onSubmit={handleFeeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <Input label="Select Student" select value={feeCollectForm.studentId} onChange={(e) => setFeeCollectForm(prev => ({ ...prev, studentId: e.target.value }))} options={students.map(s => ({ value: s.id, label: s.name }))} />
-          <Input label="Fee Category" select value={feeCollectForm.categoryId} onChange={(e) => setFeeCollectForm(prev => ({ ...prev, categoryId: e.target.value }))} options={feeCategories.map(c => ({ value: c.id, label: `${c.name} ($${c.amount})` }))} />
-          <Input label="Amount Collected ($)" type="number" value={feeCollectForm.amount} onChange={(e) => setFeeCollectForm(prev => ({ ...prev, amount: Number(e.target.value) }))} />
-          <Input label="Payment Mode" select value={feeCollectForm.method} onChange={(e) => setFeeCollectForm(prev => ({ ...prev, method: e.target.value }))} options={[{ value: 'Cash', label: 'Cash Payment' }, { value: 'Card Swipe', label: 'POS Card Swipe' }, { value: 'Online NetBanking', label: 'Online NetBanking' }]} />
-          
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
-            <Button type="button" variant="outline" onClick={() => setShowCollectFee(false)}>Cancel</Button>
-            <Button type="submit">Process Payment</Button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <Input 
+              label="1. Filter Class" 
+              select={true} 
+              value={feeCollectClassId} 
+              onChange={(e) => {
+                setFeeCollectClassId(e.target.value);
+                setFeeCollectStudentId('');
+                setFeeCollectPayCategoryId(null);
+              }}
+              options={classes.map(c => ({ value: c.id, label: c.name }))}
+            />
+            <Input 
+              label="2. Select Student" 
+              select={true} 
+              value={feeCollectStudentId} 
+              onChange={(e) => {
+                setFeeCollectStudentId(e.target.value);
+                setFeeCollectPayCategoryId(null);
+              }}
+              options={[
+                { value: '', label: 'Select Student Profile...' },
+                ...feeCollectFilteredStudents.map(s => ({ value: s.id, label: `${s.name} (Roll: ${s.rollNo})` }))
+              ]}
+            />
           </div>
-        </form>
+
+          {selectedCollectStudent ? (
+            <div style={{ marginTop: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+              <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 700 }}>{selectedCollectStudent.name}</h4>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    Class: {activeCollectStudentClass?.name} | Admission No: {selectedCollectStudent.admissionNo}
+                  </span>
+                </div>
+                <div className="badge badge-info" style={{ fontSize: '11px' }}>
+                  Fee Ledger Checked
+                </div>
+              </div>
+
+              <Table
+                data={feeCategories}
+                columns={[
+                  { key: 'name', title: 'Fee Particular' },
+                  { 
+                    key: 'amount', 
+                    title: 'Total Due', 
+                    render: (row) => `$${row.amount}` 
+                  },
+                  {
+                    key: 'paid',
+                    title: 'Amount Paid',
+                    render: (row) => {
+                      const paymentsList = getSchoolData<any>('erp_fee_payments', schoolId);
+                      const payment = paymentsList.find((p: any) => p.studentId === feeCollectStudentId && p.categoryId === row.id);
+                      return `$${payment ? payment.amountPaid : 0}`;
+                    }
+                  },
+                  {
+                    key: 'left',
+                    title: 'Balance Left',
+                    render: (row) => {
+                      const paymentsList = getSchoolData<any>('erp_fee_payments', schoolId);
+                      const payment = paymentsList.find((p: any) => p.studentId === feeCollectStudentId && p.categoryId === row.id);
+                      const paid = payment ? payment.amountPaid : 0;
+                      return (
+                        <span style={{ fontWeight: 600, color: (row.amount - paid) > 0 ? 'var(--error-color)' : 'var(--success-color)' }}>
+                          ${row.amount - paid}
+                        </span>
+                      );
+                    }
+                  },
+                  {
+                    key: 'status',
+                    title: 'Status',
+                    render: (row) => {
+                      const paymentsList = getSchoolData<any>('erp_fee_payments', schoolId);
+                      const payment = paymentsList.find((p: any) => p.studentId === feeCollectStudentId && p.categoryId === row.id);
+                      const paid = payment ? payment.amountPaid : 0;
+                      const status = paid >= row.amount ? 'paid' : paid > 0 ? 'partial' : 'unpaid';
+                      const badgeClass = status === 'paid' ? 'badge-success' : status === 'partial' ? 'badge-warning' : 'badge-error';
+                      return (
+                        <span className={`badge ${badgeClass}`} style={{ textTransform: 'capitalize' }}>
+                          {status}
+                        </span>
+                      );
+                    }
+                  },
+                  {
+                    key: 'actions',
+                    title: 'Actions',
+                    align: 'right',
+                    render: (row) => {
+                      const paymentsList = getSchoolData<any>('erp_fee_payments', schoolId);
+                      const payment = paymentsList.find((p: any) => p.studentId === feeCollectStudentId && p.categoryId === row.id);
+                      const paid = payment ? payment.amountPaid : 0;
+                      const left = row.amount - paid;
+                      
+                      return (
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          {left > 0 && (
+                            <Button 
+                              size="sm" 
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => {
+                                setFeeCollectPayCategoryId(row.id);
+                                setFeeCollectPayAmount(left);
+                              }}
+                            >
+                              Paid
+                            </Button>
+                          )}
+                          {paid > 0 && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => {
+                                const activePay = payment || {
+                                  date: new Date().toISOString().split('T')[0],
+                                  paymentMethod: 'Cash',
+                                  amountPaid: paid,
+                                  transactionId: 'TXN-MOCK-INV'
+                                };
+                                setShowReceiptDetail({
+                                  ...activePay,
+                                  categoryName: row.name,
+                                  amountPaid: paid
+                                });
+                              }}
+                            >
+                              Receipt
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    }
+                  }
+                ]}
+              />
+
+              {/* Inline Pay Sheet */}
+              {feeCollectPayCategoryId && (
+                <div style={{ marginTop: '16px', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)' }}>
+                  <h5 style={{ fontSize: '13px', fontWeight: 650, marginBottom: '12px' }}>
+                    Record Payment for {feeCategories.find(c => c.id === feeCollectPayCategoryId)?.name}
+                  </h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr', gap: '12px', alignItems: 'end' }}>
+                    <Input 
+                      label="Amount Collected ($)" 
+                      type="number" 
+                      value={feeCollectPayAmount} 
+                      onChange={(e) => setFeeCollectPayAmount(Number(e.target.value))} 
+                    />
+                    <Input 
+                      label="Payment Mode" 
+                      select={true} 
+                      value={feeCollectPayMethod} 
+                      onChange={(e) => setFeeCollectPayMethod(e.target.value)} 
+                      options={[
+                        { value: 'Cash', label: 'Cash Payment' }, 
+                        { value: 'Card Swipe', label: 'POS Card Swipe' }, 
+                        { value: 'Online NetBanking', label: 'Online NetBanking' }
+                      ]} 
+                    />
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                      <Button 
+                        size="sm" 
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          const category = feeCategories.find(c => c.id === feeCollectPayCategoryId);
+                          if (category) {
+                            collectFee(schoolId, feeCollectStudentId, category.id, feeCollectPayAmount, feeCollectPayMethod);
+                            setFeeCollectPayCategoryId(null);
+                            loadERPData();
+                            alert('Fee recorded and receipt generated!');
+                          }
+                        }}
+                      >
+                        Confirm
+                      </Button>
+                      <Button size="sm" variant="outline" style={{ cursor: 'pointer' }} onClick={() => setFeeCollectPayCategoryId(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px 0', border: '1px dashed var(--border-color)', borderRadius: '8px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+              Select a class and student profile to query the fee ledger.
+            </div>
+          )}
+        </div>
+      </Dialog>
+
+      {/* RECEIPT DETAIL DIALOG */}
+      <Dialog
+        isOpen={!!showReceiptDetail}
+        onClose={() => setShowReceiptDetail(null)}
+        title="Payment Receipt Record"
+      >
+        {showReceiptDetail && (
+          <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '16px', fontFamily: 'var(--font-sans)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed var(--border-color)', paddingBottom: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--primary-color)' }}>{school.name}</h3>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{school.city}, {school.state}</span>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '11px', fontWeight: 650, display: 'block' }}>RECEIPT INVOICE</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{showReceiptDetail.transactionId || 'TXN-MOCK'}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
+              <div>
+                <span style={{ color: 'var(--text-tertiary)', display: 'block' }}>Student Name:</span>
+                <strong>{selectedCollectStudent?.name}</strong>
+                <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Class: {activeCollectStudentClass?.name} | Roll No: {selectedCollectStudent?.rollNo}</span>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ color: 'var(--text-tertiary)', display: 'block' }}>Date Collected:</span>
+                <strong>{new Date(showReceiptDetail.date).toLocaleDateString()}</strong>
+                <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Mode: {showReceiptDetail.paymentMethod}</span>
+              </div>
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '12.5px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+                  <th style={{ textAlign: 'left', padding: '6px' }}>Fee Particular</th>
+                  <th style={{ textAlign: 'right', padding: '6px' }}>Amount Paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '8px 6px' }}>{showReceiptDetail.categoryName}</td>
+                  <td style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 600 }}>${showReceiptDetail.amountPaid}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style={{ textAlign: 'center', marginTop: '16px', borderTop: '1px dashed var(--border-color)', paddingTop: '12px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>Thank you for your fee payment!</span>
+              <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>This is a computer-generated transaction record. No signature required.</span>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
+              <Button size="sm" onClick={() => {
+                const txt = `
+========================================
+          ${school.name} FEE RECEIPT
+========================================
+Receipt ID: ${showReceiptDetail.transactionId || 'TXN-MOCK'}
+Date: ${showReceiptDetail.date}
+
+Student Name: ${selectedCollectStudent?.name}
+Class: ${activeCollectStudentClass?.name}
+Roll Number: ${selectedCollectStudent?.rollNo}
+----------------------------------------
+Fee Particulars               Amount Paid
+----------------------------------------
+${showReceiptDetail.categoryName.padEnd(30)} $${showReceiptDetail.amountPaid}
+----------------------------------------
+Payment Mode: ${showReceiptDetail.paymentMethod}
+========================================
+                `;
+                const element = document.createElement("a");
+                const file = new Blob([txt], {type: 'text/plain'});
+                element.href = URL.createObjectURL(file);
+                element.download = `Receipt_${selectedCollectStudent?.name.replace(/\s/g, '_')}_${showReceiptDetail.categoryName.replace(/\s/g, '_')}.txt`;
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+              }}>
+                Download Receipt Text File
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowReceiptDetail(null)}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Dialog>
+
+      {/* EXAM TIMETABLE DIALOG */}
+      <Dialog
+        isOpen={showExamTimetable}
+        onClose={() => setShowExamTimetable(false)}
+        title="Institutional Exam Timetable Schedule"
+        size="lg"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+            The current active examination schedule for this academic session:
+          </p>
+          <Table
+            data={exams}
+            columns={[
+              { key: 'name', title: 'Exam Name' },
+              { key: 'term', title: 'Academic Term' },
+              { key: 'startDate', title: 'Start Date', render: (row) => new Date(row.startDate).toLocaleDateString() },
+              { key: 'endDate', title: 'End Date', render: (row) => new Date(row.endDate).toLocaleDateString() },
+              {
+                key: 'details',
+                title: 'Timetable Status',
+                render: () => (
+                  <span className="badge badge-success" style={{ fontSize: '11px' }}>
+                    Scheduled (9:00 AM - 12:00 PM)
+                  </span>
+                )
+              }
+            ]}
+          />
+          <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px', backgroundColor: 'var(--bg-tertiary)', fontSize: '12px' }}>
+            <strong>💡 Pro Tip:</strong> You can configure new exam schedules and publish term marks sheets under the <strong>Academics & Classes</strong> settings tab.
+          </div>
+        </div>
       </Dialog>
 
       {/* MARKS ENTRY DIALOG */}
