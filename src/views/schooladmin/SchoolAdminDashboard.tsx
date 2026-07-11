@@ -90,6 +90,10 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
     description: ''
   });
 
+  // Parents Directory Filters
+  const [parentSearchQuery, setParentSearchQuery] = useState('');
+  const [parentClassFilter, setParentClassFilter] = useState('');
+
   // Focus entity states
   const [activeStudent, setActiveStudent] = useState<any | null>(null);
   const [activeTeacher, setActiveTeacher] = useState<any | null>(null);
@@ -492,26 +496,64 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
       )}
 
       {/* 3. PARENTS DIRECTORY */}
-      {activeTab === 'parents' && (
-        <Card title="Parents Registry" subtitle="Linked guardian accounts and communication setups.">
-          <div style={{ marginTop: '16px' }}>
-            <Table
-              data={parents}
-              columns={[
-                { key: 'name', title: 'Guardian Name' },
-                { key: 'email', title: 'Email Address' },
-                { key: 'phone', title: 'Phone' },
-                { key: 'occupation', title: 'Occupation' },
-                {
-                  key: 'childrenNames',
-                  title: 'Children Linked',
-                  render: (row) => row.childrenNames.join(', ')
-                }
-              ]}
-            />
-          </div>
-        </Card>
-      )}
+      {activeTab === 'parents' && (() => {
+        const filteredParents = parents.filter(p => {
+          const query = parentSearchQuery.toLowerCase();
+          const matchesSearch = 
+            p.name.toLowerCase().includes(query) ||
+            p.email.toLowerCase().includes(query) ||
+            p.phone.toLowerCase().includes(query);
+
+          if (parentClassFilter) {
+            const matchesClass = students.some(std => 
+              p.childrenIds.includes(std.id) && std.classId === parentClassFilter
+            );
+            return matchesSearch && matchesClass;
+          }
+          return matchesSearch;
+        });
+
+        return (
+          <Card title="Parents Registry" subtitle="Linked guardian accounts and communication setups.">
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1', minWidth: '250px' }}>
+                <Input 
+                  placeholder="Search by Guardian name, email or phone..." 
+                  value={parentSearchQuery}
+                  onChange={(e) => setParentSearchQuery(e.target.value)}
+                />
+              </div>
+              <div style={{ width: '220px' }}>
+                <Input 
+                  select={true}
+                  value={parentClassFilter}
+                  onChange={(e) => setParentClassFilter(e.target.value)}
+                  options={[
+                    { value: '', label: 'All Classes & Sections' },
+                    ...classes.map(c => ({ value: c.id, label: `${c.className}-${c.sectionName}` }))
+                  ]}
+                />
+              </div>
+            </div>
+            <div>
+              <Table
+                data={filteredParents}
+                columns={[
+                  { key: 'name', title: 'Guardian Name' },
+                  { key: 'email', title: 'Email Address' },
+                  { key: 'phone', title: 'Phone' },
+                  { key: 'occupation', title: 'Occupation' },
+                  {
+                    key: 'childrenNames',
+                    title: 'Children Linked',
+                    render: (row) => row.childrenNames.join(', ')
+                  }
+                ]}
+              />
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* 4. TEACHERS HUB */}
       {activeTab === 'teachers' && (
