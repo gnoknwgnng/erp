@@ -598,7 +598,7 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
               columns={[
                 { key: 'name', title: 'Teacher Name' },
                 { key: 'email', title: 'Email' },
-                { key: 'qualification', title: 'Credentials' },
+                { key: 'qualification', title: 'Qualification' },
                 { key: 'experience', title: 'Tenure' },
                 {
                   key: 'subjects',
