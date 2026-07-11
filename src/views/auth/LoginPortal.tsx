@@ -273,6 +273,10 @@ export const LoginPortal: React.FC<LoginPortalProps> = ({ onLoginSuccess, onBack
           )}
         </Card>
 
+        <p style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+          Made with ❤️ by <strong>sreevia ai</strong>
+        </p>
+
         {/* Quick prefill panel (Only visible when not in sub-steps) */}
         {!mfaStep && !forgotStep ? (
           <div style={{

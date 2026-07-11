@@ -412,6 +412,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onSchool
       {/* Footer */}
       <footer style={{ borderTop: '1px solid var(--border-color)', padding: '40px 5vw', backgroundColor: 'var(--bg-secondary)', textAlign: 'center', fontSize: '13px', color: 'var(--text-secondary)' }}>
         <p>© 2026 OmniSchool SaaS Systems. Built for next-generation digital schooling. All rights reserved.</p>
+        <p style={{ marginTop: '8px', fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
+          Made with ❤️ by <strong>sreevia ai</strong>
+        </p>
       </footer>
 
       {/* SCHOOL REGISTRATION MODAL WIZARD */}
