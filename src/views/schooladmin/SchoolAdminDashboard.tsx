@@ -158,10 +158,12 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
       emergencyContact: admissionForm.emergencyContact || `${admissionForm.parentName} (${admissionForm.parentPhone})`
     };
 
+    const generatedStudentUsername = `std_${admissionForm.name.toLowerCase().replace(/\s/g, '')}_${Math.floor(100 + Math.random() * 900)}`;
+
     const userData = {
       name: admissionForm.name,
-      email: admissionForm.email,
-      username: admissionForm.username || `std_${admissionForm.name.toLowerCase().replace(/\s/g, '')}`,
+      email: admissionForm.parentEmail, // Default to parent email since student email is removed
+      username: generatedStudentUsername, // Auto generated student username ID
       passwordHash: admissionForm.password
     };
 
@@ -169,7 +171,7 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
       name: admissionForm.parentName,
       email: admissionForm.parentEmail,
       phone: admissionForm.parentPhone,
-      username: admissionForm.parentUsername || `par_${admissionForm.parentName.toLowerCase().replace(/\s/g, '')}`,
+      username: admissionForm.parentEmail.toLowerCase(), // Parent Email used as login username ID
       occupation: admissionForm.occupation,
       income: admissionForm.income,
       address: admissionForm.address
@@ -874,21 +876,42 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
         size="lg"
       >
         <form onSubmit={handleAdmissionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h3 style={{ fontSize: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>1. Student Profile Accounts</h3>
+          <h3 style={{ fontSize: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>1. Student Profile Details</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <Input label="Student Name" required value={admissionForm.name} onChange={(e) => setAdmissionForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Lisa Simpson" />
-            <Input label="Email ID" type="email" required value={admissionForm.email} onChange={(e) => setAdmissionForm(prev => ({ ...prev, email: e.target.value }))} placeholder="lisa@springfield.edu" />
-            <Input label="Login Username ID" required value={admissionForm.username} onChange={(e) => setAdmissionForm(prev => ({ ...prev, username: e.target.value }))} placeholder="e.g. lisasimpson" />
             <Input label="Roster Roll Number" required value={admissionForm.rollNo} onChange={(e) => setAdmissionForm(prev => ({ ...prev, rollNo: e.target.value }))} placeholder="e.g. 24" />
-            <Input label="Grade Class Room" select value={admissionForm.classId} onChange={(e) => setAdmissionForm(prev => ({ ...prev, classId: e.target.value }))} options={classes.map(c => ({ value: c.id, label: `${c.className}-${c.sectionName}` }))} />
+            <Input label="Grade Class Room" select={true} value={admissionForm.classId} onChange={(e) => setAdmissionForm(prev => ({ ...prev, classId: e.target.value }))} options={classes.map(c => ({ value: c.id, label: `${c.className}-${c.sectionName}` }))} />
             <Input label="Date of Birth" type="date" value={admissionForm.dob} onChange={(e) => setAdmissionForm(prev => ({ ...prev, dob: e.target.value }))} />
+            <Input 
+              label="Gender" 
+              select={true} 
+              value={admissionForm.gender} 
+              onChange={(e) => setAdmissionForm(prev => ({ ...prev, gender: e.target.value }))} 
+              options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }, { value: 'Other', label: 'Other' }]}
+            />
+            <Input 
+              label="Blood Group" 
+              select={true} 
+              value={admissionForm.bloodGroup} 
+              onChange={(e) => setAdmissionForm(prev => ({ ...prev, bloodGroup: e.target.value }))} 
+              options={[
+                { value: 'A+', label: 'A+' },
+                { value: 'A-', label: 'A-' },
+                { value: 'B+', label: 'B+' },
+                { value: 'B-', label: 'B-' },
+                { value: 'AB+', label: 'AB+' },
+                { value: 'AB-', label: 'AB-' },
+                { value: 'O+', label: 'O+' },
+                { value: 'O-', label: 'O-' }
+              ]}
+            />
           </div>
 
           <h3 style={{ fontSize: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px', marginTop: '12px' }}>2. Parent / Guardian Details</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <Input label="Parent Full Name" required value={admissionForm.parentName} onChange={(e) => setAdmissionForm(prev => ({ ...prev, parentName: e.target.value }))} placeholder="Homer Simpson" />
             <Input label="Parent Phone" required value={admissionForm.parentPhone} onChange={(e) => setAdmissionForm(prev => ({ ...prev, parentPhone: e.target.value }))} placeholder="+1-555-0133" />
-            <Input label="Parent Username ID" required value={admissionForm.parentUsername} onChange={(e) => setAdmissionForm(prev => ({ ...prev, parentUsername: e.target.value }))} placeholder="e.g. homersimpson" />
+            <Input label="Parent Email ID (Login Username)" type="email" required value={admissionForm.parentEmail} onChange={(e) => setAdmissionForm(prev => ({ ...prev, parentEmail: e.target.value }))} placeholder="homer@springfield.com" />
             <Input label="Address Details" required value={admissionForm.address} onChange={(e) => setAdmissionForm(prev => ({ ...prev, address: e.target.value }))} placeholder="742 Evergreen Terrace" />
           </div>
 
