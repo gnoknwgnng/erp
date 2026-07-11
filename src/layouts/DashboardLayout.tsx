@@ -234,6 +234,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: '0' }}>
         {/* Top Navbar */}
         <header
+          className="glassmorphism"
           style={{
             height: '60px',
             borderBottom: '1px solid var(--border-color)',
@@ -241,10 +242,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0 24px',
-            backgroundColor: 'var(--bg-secondary)',
             position: 'sticky',
             top: 0,
-            zIndex: 99
+            zIndex: 99,
+            backgroundColor: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(5, 5, 8, 0.7)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)'
           }}
         >
           {/* Left: Menu toggle & Breadcrumbs */}
@@ -291,10 +294,43 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </span>
             </button>
 
-            {/* Theme switcher */}
-            <Button variant="ghost" size="sm" onClick={toggleTheme} style={{ padding: '8px' }}>
-              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-            </Button>
+            {/* Theme switcher capsule slider */}
+            <div 
+              onClick={toggleTheme}
+              title={theme === 'light' ? "Switch to Dark Mode" : "Switch to Light Mode"}
+              style={{
+                width: '46px',
+                height: '24px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-color)',
+                position: 'relative',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0 5px',
+                transition: 'all var(--transition-fast)'
+              }}
+            >
+              <Sun size={10} style={{ color: theme === 'light' ? 'var(--warning-color)' : 'var(--text-tertiary)', zIndex: 2 }} />
+              <Moon size={10} style={{ color: theme === 'dark' ? 'var(--primary-color)' : 'var(--text-tertiary)', zIndex: 2 }} />
+              <div 
+                style={{
+                  position: 'absolute',
+                  top: '1.5px',
+                  left: theme === 'light' ? '2px' : '23px',
+                  width: '19px',
+                  height: '19px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--bg-secondary)',
+                  boxShadow: 'var(--shadow-sm)',
+                  border: '1px solid var(--border-color)',
+                  transition: 'all var(--transition-fast)',
+                  zIndex: 1
+                }}
+              />
+            </div>
 
             {/* Notifications button */}
             <div style={{ position: 'relative' }}>

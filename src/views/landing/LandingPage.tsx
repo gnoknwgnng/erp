@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Check, ArrowRight, CheckCircle, X
+  Check, ArrowRight, CheckCircle, X, Sun, Moon
 } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
@@ -10,9 +10,11 @@ import { registerSchool, getPlans } from '../../db/dbEngine';
 interface LandingPageProps {
   onLoginClick: () => void;
   onSchoolRegistered: (schoolName: string) => void;
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onSchoolRegistered }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onSchoolRegistered, theme, toggleTheme }) => {
   const [showRegModal, setShowRegModal] = useState(false);
   const [regStep, setRegStep] = useState(1); // 1: Details, 2: Academic, 3: Verification
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
@@ -130,8 +132,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onSchool
         padding: '0 5vw',
         position: 'sticky',
         top: 0,
-        backgroundColor: 'rgba(255,255,255,0.8)',
-        backdropFilter: 'blur(10px)',
+        backgroundColor: theme === 'light' ? 'rgba(255,255,255,0.7)' : 'rgba(5,5,8,0.7)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         zIndex: 50
       }} className="glassmorphism">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -143,10 +146,49 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onSchool
           </span>
         </div>
 
-        <nav className="landing-nav" style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
+        <nav className="landing-nav" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           <a href="#features" style={{ fontSize: '14px', textDecoration: 'none', color: 'var(--text-secondary)', fontWeight: 500 }}>Features</a>
           <a href="#pricing" style={{ fontSize: '14px', textDecoration: 'none', color: 'var(--text-secondary)', fontWeight: 500 }}>Pricing</a>
           <a href="#faq" style={{ fontSize: '14px', textDecoration: 'none', color: 'var(--text-secondary)', fontWeight: 500 }}>FAQ</a>
+          
+          {/* Theme switcher capsule slider */}
+          <div 
+            onClick={toggleTheme}
+            title={theme === 'light' ? "Switch to Dark Mode" : "Switch to Light Mode"}
+            style={{
+              width: '46px',
+              height: '24px',
+              borderRadius: '12px',
+              backgroundColor: 'var(--bg-tertiary)',
+              border: '1px solid var(--border-color)',
+              position: 'relative',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0 5px',
+              transition: 'all var(--transition-fast)'
+            }}
+          >
+            <Sun size={10} style={{ color: theme === 'light' ? 'var(--warning-color)' : 'var(--text-tertiary)', zIndex: 2 }} />
+            <Moon size={10} style={{ color: theme === 'dark' ? 'var(--primary-color)' : 'var(--text-tertiary)', zIndex: 2 }} />
+            <div 
+              style={{
+                position: 'absolute',
+                top: '1.5px',
+                left: theme === 'light' ? '2px' : '23px',
+                width: '19px',
+                height: '19px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--bg-secondary)',
+                boxShadow: 'var(--shadow-sm)',
+                border: '1px solid var(--border-color)',
+                transition: 'all var(--transition-fast)',
+                zIndex: 1
+              }}
+            />
+          </div>
+
           <Button variant="outline" size="sm" onClick={onLoginClick}>Sign In</Button>
           <Button size="sm" onClick={() => { setShowRegModal(true); setRegStep(1); }}>Start Free Trial</Button>
         </nav>

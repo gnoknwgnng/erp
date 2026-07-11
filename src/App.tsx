@@ -107,6 +107,8 @@ function App() {
         <LandingPage 
           onLoginClick={() => setView('login')} 
           onSchoolRegistered={handleSchoolRegistered}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
       )}
 
