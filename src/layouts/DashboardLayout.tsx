@@ -3,7 +3,7 @@ import {
   Menu, Bell, Search, Sun, Moon, LogOut, LayoutDashboard, Monitor, 
   CreditCard, Settings, GraduationCap, Users, BookOpen, Clock, FileText, 
   Book, Truck, Home, Package, DollarSign, MessageSquare, Clipboard, 
-  HelpCircle, UserCheck, ShieldAlert
+  HelpCircle, UserCheck, ShieldAlert, Tag, Gift, ShoppingCart
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import type { School, User } from '../db/initialData';
@@ -50,6 +50,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'dashboard', label: 'Platform Overview', icon: <LayoutDashboard size={18} /> },
           { id: 'schools', label: 'Schools Registry', icon: <Monitor size={18} /> },
           { id: 'plans', label: 'Subscription Plans', icon: <CreditCard size={18} /> },
+          { id: 'coupons', label: 'Promo Coupons', icon: <Tag size={18} /> },
+          { id: 'wishes', label: 'Broadcast Wishes', icon: <Gift size={18} /> },
+          { id: 'orders', label: 'SaaS Orders', icon: <ShoppingCart size={18} /> },
           { id: 'support', label: 'Support Tickets', icon: <HelpCircle size={18} /> },
           { id: 'settings', label: 'Platform Settings', icon: <Settings size={18} /> },
           { id: 'logs', label: 'Global Audit Logs', icon: <ShieldAlert size={18} /> }

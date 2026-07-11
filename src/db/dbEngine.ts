@@ -22,7 +22,10 @@ const KEYS = {
   HOSTELS: 'erp_hostels',
   BOOKS: 'erp_books',
   AUDIT_LOGS: 'erp_audit_logs',
-  TICKETS: 'erp_tickets'
+  TICKETS: 'erp_tickets',
+  COUPONS: 'erp_coupons',
+  WISHES: 'erp_wishes',
+  ORDERS: 'erp_orders'
 };
 
 // Initialize DB with seed data if empty
@@ -49,6 +52,9 @@ export function initDatabase() {
     localStorage.setItem(KEYS.BOOKS, JSON.stringify(Seed.SEED_BOOKS));
     localStorage.setItem(KEYS.AUDIT_LOGS, JSON.stringify(Seed.SEED_AUDIT_LOGS));
     localStorage.setItem(KEYS.TICKETS, JSON.stringify(Seed.SEED_TICKETS));
+    localStorage.setItem(KEYS.COUPONS, JSON.stringify(Seed.SEED_COUPONS));
+    localStorage.setItem(KEYS.WISHES, JSON.stringify(Seed.SEED_WISHES));
+    localStorage.setItem(KEYS.ORDERS, JSON.stringify(Seed.SEED_ORDERS));
   }
 }
 
@@ -652,4 +658,94 @@ export function updateBusGPS(schoolId: string, routeId: string, lat: number, lng
     routes[idx].currentLng = lng;
     saveTable(KEYS.ROUTES, routes);
   }
+}
+
+// Subscription plans operations (Super Admin)
+export function getSubscriptionPlans(): Seed.SubscriptionPlan[] {
+  return getTable<Seed.SubscriptionPlan>(KEYS.PLANS);
+}
+
+export function updateSubscriptionPlan(planId: string, details: Partial<Seed.SubscriptionPlan>): Seed.SubscriptionPlan[] {
+  const plans = getTable<Seed.SubscriptionPlan>(KEYS.PLANS);
+  const idx = plans.findIndex(p => p.id === planId);
+  if (idx !== -1) {
+    plans[idx] = { ...plans[idx], ...details };
+    saveTable(KEYS.PLANS, plans);
+    addAuditLog(null, 'superadmin', 'Super Admin', `Updated subscription plan details for ${plans[idx].name}`);
+  }
+  return plans;
+}
+
+// Coupons operations (Super Admin)
+export function getCoupons(): Seed.Coupon[] {
+  return getTable<Seed.Coupon>(KEYS.COUPONS);
+}
+
+export function createCoupon(coupon: Omit<Seed.Coupon, 'id' | 'createdAt'>): Seed.Coupon[] {
+  const coupons = getTable<Seed.Coupon>(KEYS.COUPONS);
+  const newCoupon: Seed.Coupon = {
+    ...coupon,
+    id: `coupon-${Date.now()}`,
+    createdAt: new Date().toISOString()
+  };
+  coupons.push(newCoupon);
+  saveTable(KEYS.COUPONS, coupons);
+  addAuditLog(null, 'superadmin', 'Super Admin', `Created discount promo code: ${coupon.code}`);
+  return coupons;
+}
+
+export function toggleCouponStatus(couponId: string, status: 'active' | 'inactive'): Seed.Coupon[] {
+  const coupons = getTable<Seed.Coupon>(KEYS.COUPONS);
+  const idx = coupons.findIndex(c => c.id === couponId);
+  if (idx !== -1) {
+    coupons[idx].status = status;
+    saveTable(KEYS.COUPONS, coupons);
+    addAuditLog(null, 'superadmin', 'Super Admin', `Toggled coupon status for ${coupons[idx].code} to ${status}`);
+  }
+  return coupons;
+}
+
+export function deleteCoupon(couponId: string): Seed.Coupon[] {
+  const coupons = getTable<Seed.Coupon>(KEYS.COUPONS);
+  const filtered = coupons.filter(c => c.id !== couponId);
+  saveTable(KEYS.COUPONS, filtered);
+  addAuditLog(null, 'superadmin', 'Super Admin', `Removed coupon registry ID: ${couponId}`);
+  return filtered;
+}
+
+// Wishes operations (Super Admin Broadcasts)
+export function getWishes(): Seed.Wish[] {
+  return getTable<Seed.Wish>(KEYS.WISHES);
+}
+
+export function dispatchWish(wish: Omit<Seed.Wish, 'id' | 'dispatchedAt'>): Seed.Wish[] {
+  const wishes = getTable<Seed.Wish>(KEYS.WISHES);
+  const newWish: Seed.Wish = {
+    ...wish,
+    id: `wish-${Date.now()}`,
+    dispatchedAt: new Date().toISOString()
+  };
+  wishes.unshift(newWish);
+  saveTable(KEYS.WISHES, wishes);
+  
+  // Add a global audit log entry representing broadcast
+  addAuditLog(null, 'superadmin', 'Super Admin', `Broadcasted school announcement: ${wish.title}`);
+  return wishes;
+}
+
+// Orders operations
+export function getOrders(): Seed.Order[] {
+  return getTable<Seed.Order>(KEYS.ORDERS);
+}
+
+export function createOrder(order: Omit<Seed.Order, 'id' | 'createdAt'>): Seed.Order[] {
+  const orders = getTable<Seed.Order>(KEYS.ORDERS);
+  const newOrder: Seed.Order = {
+    ...order,
+    id: `ord-${Date.now().toString().slice(-5)}`,
+    createdAt: new Date().toISOString()
+  };
+  orders.unshift(newOrder);
+  saveTable(KEYS.ORDERS, orders);
+  return orders;
 }

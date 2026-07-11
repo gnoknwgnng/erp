@@ -677,3 +677,51 @@ export const SEED_TICKETS: SupportTicket[] = [
     createdAt: '2026-07-10T11:00:00Z'
   }
 ];
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discountType: 'percentage' | 'flat';
+  discountValue: number;
+  expiryDate: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
+
+export interface Wish {
+  id: string;
+  title: string;
+  message: string;
+  category: 'festive' | 'maintenance' | 'announcement';
+  dispatchedAt: string;
+}
+
+export interface Order {
+  id: string;
+  schoolId: string;
+  schoolName: string;
+  planId: string;
+  planName: string;
+  amount: number;
+  billingCycle: 'monthly' | 'yearly';
+  status: 'paid' | 'pending' | 'failed';
+  paymentMethod: string;
+  createdAt: string;
+}
+
+export const SEED_COUPONS: Coupon[] = [
+  { id: 'coupon-1', code: 'WELCOME50', discountType: 'percentage', discountValue: 50, expiryDate: '2026-12-31', status: 'active', createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'coupon-2', code: 'SUMMER20', discountType: 'percentage', discountValue: 20, expiryDate: '2026-08-31', status: 'active', createdAt: '2026-06-01T00:00:00Z' },
+  { id: 'coupon-3', code: 'FLAT100', discountType: 'flat', discountValue: 100, expiryDate: '2026-10-31', status: 'inactive', createdAt: '2026-03-01T00:00:00Z' }
+];
+
+export const SEED_WISHES: Wish[] = [
+  { id: 'wish-1', title: 'Happy New Academic Term!', message: 'OmniSchool wishes all institutions, principals, faculty members, and students a highly productive and successful new term.', category: 'announcement', dispatchedAt: '2026-07-11T10:00:00Z' },
+  { id: 'wish-2', title: 'System Security Patch v4.2', message: 'We have updated all tenant authentication systems. Active database keys are fully encrypted and MFA options are active.', category: 'maintenance', dispatchedAt: '2026-07-09T09:00:00Z' }
+];
+
+export const SEED_ORDERS: Order[] = [
+  { id: 'ord-101', schoolId: 'school-springfield', schoolName: 'Springfield Academy', planId: 'plan-pro', planName: 'Professional Plan', amount: 199, billingCycle: 'monthly', status: 'paid', paymentMethod: 'Stripe Card', createdAt: '2026-07-01T12:00:00Z' },
+  { id: 'ord-102', schoolId: 'school-hogwarts', schoolName: 'Hogwarts School', planId: 'plan-enterprise', planName: 'Enterprise Plan', amount: 399, billingCycle: 'monthly', status: 'paid', paymentMethod: 'Stripe Card', createdAt: '2026-07-05T08:30:00Z' },
+  { id: 'ord-103', schoolId: 'school-springfield', schoolName: 'Springfield Academy', planId: 'plan-pro', planName: 'Professional Plan', amount: 199, billingCycle: 'monthly', status: 'paid', paymentMethod: 'Stripe Card', createdAt: '2026-06-01T12:00:00Z' }
+];
