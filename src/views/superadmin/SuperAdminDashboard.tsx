@@ -459,18 +459,19 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ active
                 />
                 <Input 
                   label="Broadcast Type" 
-                  type="select"
+                  select={true}
+                  options={[
+                    { value: 'announcement', label: 'Announcement' },
+                    { value: 'festive', label: 'Festive Wishes' },
+                    { value: 'maintenance', label: 'Maintenance Alert' }
+                  ]}
                   value={wishForm.category}
                   onChange={(e) => setWishForm(prev => ({ ...prev, category: e.target.value as any }))}
-                >
-                  <option value="announcement">Announcement</option>
-                  <option value="festive">Festive Wishes</option>
-                  <option value="maintenance">Maintenance Alert</option>
-                </Input>
+                />
               </div>
               <Input 
                 label="Message Broadcast Body"
-                type="textarea"
+                textarea={true}
                 rows={4}
                 placeholder="Write your greeting or update details here..."
                 value={wishForm.message}
@@ -764,7 +765,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ active
           </div>
           <Input 
             label="Features list (comma separated)" 
-            type="textarea"
+            textarea={true}
             rows={3}
             value={planForm.features} 
             onChange={(e) => setPlanForm(prev => ({ ...prev, features: e.target.value }))}
@@ -794,13 +795,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ active
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <Input 
               label="Discount Type" 
-              type="select"
+              select={true}
+              options={[
+                { value: 'percentage', label: 'Percentage (%)' },
+                { value: 'flat', label: 'Flat Value ($)' }
+              ]}
               value={couponForm.discountType} 
               onChange={(e) => setCouponForm(prev => ({ ...prev, discountType: e.target.value as any }))}
-            >
-              <option value="percentage">Percentage (%)</option>
-              <option value="flat">Flat Value ($)</option>
-            </Input>
+            />
             <Input 
               label="Discount Value" 
               type="number" 
@@ -817,13 +819,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ active
             />
             <Input 
               label="Coupon State" 
-              type="select"
+              select={true}
+              options={[
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' }
+              ]}
               value={couponForm.status} 
               onChange={(e) => setCouponForm(prev => ({ ...prev, status: e.target.value as any }))}
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </Input>
+            />
           </div>
         </form>
       </Dialog>
