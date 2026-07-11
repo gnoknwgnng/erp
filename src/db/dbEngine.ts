@@ -340,7 +340,8 @@ export function admitStudent(
 export function addTeacher(
   schoolId: string,
   teacherDetails: Omit<Seed.Teacher, 'id' | 'schoolId' | 'userId' | 'status'>,
-  userDetails: { name: string; email: string; username: string; passwordHash: string; phone: string }
+  userDetails: { name: string; email: string; username: string; passwordHash: string; phone: string },
+  allocationDetails?: { classId: string; subjectId: string }
 ) {
   const users = getTable<Seed.User>(KEYS.USERS);
   const teachers = getTable<Seed.Teacher>(KEYS.TEACHERS);
@@ -372,6 +373,22 @@ export function addTeacher(
   
   saveTable(KEYS.USERS, users);
   saveTable(KEYS.TEACHERS, teachers);
+  
+  if (allocationDetails && allocationDetails.classId && allocationDetails.subjectId) {
+    const allocations = getTable<Seed.SubjectAllocation>(KEYS.ALLOCATIONS);
+    const newAllocation: Seed.SubjectAllocation = {
+      id: `alloc-${Date.now()}`,
+      schoolId,
+      classId: allocationDetails.classId,
+      subjectId: allocationDetails.subjectId,
+      teacherId,
+      timetable: [
+        { day: 'Monday', time: '10:00 AM - 11:00 AM', room: 'Classroom 1' }
+      ]
+    };
+    allocations.push(newAllocation);
+    saveTable(KEYS.ALLOCATIONS, allocations);
+  }
   
   addAuditLog(schoolId, 'admin', 'School Admin', `Added new teacher ${userDetails.name}`);
   return newTeacher;
@@ -595,15 +612,20 @@ export function getExtendedTeachers(schoolId: string) {
   const users = getTable<Seed.User>(KEYS.USERS);
   const allocations = getSchoolData<Seed.SubjectAllocation>(KEYS.ALLOCATIONS, schoolId);
   const subjects = getSchoolData<Seed.Subject>(KEYS.SUBJECTS, schoolId);
+  const classes = getSchoolData<Seed.ClassSection>(KEYS.CLASSES, schoolId);
   
   return teachers.map(t => {
     const user = users.find(u => u.id === t.userId);
     
-    // Find assigned subjects
     const teacherAllocs = allocations.filter(a => a.teacherId === t.id);
     const assignedSubjects = teacherAllocs.map(a => {
       const sub = subjects.find(s => s.id === a.subjectId);
       return sub ? sub.name : 'Unknown';
+    });
+
+    const assignedClasses = teacherAllocs.map(a => {
+      const cls = classes.find(c => c.id === a.classId);
+      return cls ? `${cls.className}-${cls.sectionName}` : 'Unknown';
     });
     
     return {
@@ -612,7 +634,8 @@ export function getExtendedTeachers(schoolId: string) {
       email: user ? user.email : '',
       phone: user ? user.phone : '',
       username: user ? user.username : '',
-      subjects: Array.from(new Set(assignedSubjects))
+      subjects: Array.from(new Set(assignedSubjects)),
+      classesList: Array.from(new Set(assignedClasses))
     };
   });
 }

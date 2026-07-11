@@ -120,7 +120,8 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
 
   const [teacherForm, setTeacherForm] = useState({
     name: '', email: '', username: '', password: 'teacher123', phone: '',
-    qualification: 'Bachelor of Science', experience: '3 years', salary: 3200
+    qualification: 'Bachelor of Science', experience: '3 years', salary: 3200,
+    classId: '', subjectId: ''
   });
 
 
@@ -215,8 +216,18 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
       phone: teacherForm.phone
     };
 
-    addTeacher(schoolId, teacherData, userData);
+    const allocationDetails = {
+      classId: teacherForm.classId,
+      subjectId: teacherForm.subjectId
+    };
+
+    addTeacher(schoolId, teacherData, userData, allocationDetails);
     setShowAddTeacher(false);
+    setTeacherForm({
+      name: '', email: '', username: '', password: 'teacher123', phone: '',
+      qualification: 'Bachelor of Science', experience: '3 years', salary: 3200,
+      classId: '', subjectId: ''
+    });
     loadERPData();
   };
 
@@ -629,6 +640,11 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
                   key: 'subjects',
                   title: 'Core Subjects',
                   render: (row) => row.subjects.join(', ') || 'General'
+                },
+                {
+                  key: 'classesList',
+                  title: 'Assigned Classes',
+                  render: (row) => row.classesList?.join(', ') || 'None'
                 },
                 {
                   key: 'salary',
@@ -1145,6 +1161,27 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
           <Input label="Qualifications" value={teacherForm.qualification} onChange={(e) => setTeacherForm(prev => ({ ...prev, qualification: e.target.value }))} placeholder="Master of Arts" />
           <Input label="Base Salary/mo ($)" type="number" value={teacherForm.salary} onChange={(e) => setTeacherForm(prev => ({ ...prev, salary: Number(e.target.value) }))} />
           
+          <Input 
+            label="Class Deal Assignment" 
+            select={true}
+            value={teacherForm.classId} 
+            onChange={(e) => setTeacherForm(prev => ({ ...prev, classId: e.target.value }))}
+            options={[
+              { value: '', label: 'No Class (General Assign)' },
+              ...classes.map(c => ({ value: c.id, label: `${c.className}-${c.sectionName}` }))
+            ]}
+          />
+          <Input 
+            label="Subject Deal Assignment" 
+            select={true}
+            value={teacherForm.subjectId} 
+            onChange={(e) => setTeacherForm(prev => ({ ...prev, subjectId: e.target.value }))}
+            options={[
+              { value: '', label: 'No Subject (General Assign)' },
+              ...subjects.map(s => ({ value: s.id, label: `${s.name} (${s.code})` }))
+            ]}
+          />
+
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
             <Button type="button" variant="outline" onClick={() => setShowAddTeacher(false)}>Cancel</Button>
             <Button type="submit">Register Faculty</Button>
