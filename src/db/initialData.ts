@@ -56,6 +56,7 @@ export interface Student {
   medicalDetails: string;
   emergencyContact: string;
   status: 'active' | 'graduated' | 'transferred';
+  medium?: string;
 }
 
 export interface Parent {

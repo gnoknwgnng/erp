@@ -102,7 +102,7 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
   const [admissionForm, setAdmissionForm] = useState({
     name: '', email: '', username: '', password: 'student123',
     admissionNo: '', rollNo: '', dob: '2012-01-01', gender: 'Female',
-    bloodGroup: 'B+', medicalDetails: 'None', emergencyContact: '',
+    bloodGroup: 'B+', medium: 'English', medicalDetails: 'None', emergencyContact: '',
     classId: '', sectionId: 'section-a',
     parentName: '', parentEmail: '', parentPhone: '', parentUsername: '',
     occupation: 'Self-Employed', income: '$50,000', address: ''
@@ -158,6 +158,7 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
       dob: admissionForm.dob,
       gender: admissionForm.gender,
       bloodGroup: admissionForm.bloodGroup,
+      medium: admissionForm.medium || 'English',
       medicalDetails: admissionForm.medicalDetails,
       emergencyContact: admissionForm.emergencyContact || `${admissionForm.parentName} (${admissionForm.parentPhone})`
     };
@@ -466,6 +467,7 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
                 { key: 'admissionNo', title: 'Admission ID' },
                 { key: 'name', title: 'Student Name' },
                 { key: 'className', title: 'Grade Class' },
+                { key: 'medium', title: 'Medium', render: (row) => row.medium || 'English' },
                 { key: 'parentName', title: 'Parent' },
                 { key: 'parentPhone', title: 'Contact' },
                 {
@@ -945,6 +947,20 @@ export const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({
                 { value: 'AB-', label: 'AB-' },
                 { value: 'O+', label: 'O+' },
                 { value: 'O-', label: 'O-' }
+              ]}
+            />
+            <Input 
+              label="Medium of Instruction" 
+              select={true} 
+              value={admissionForm.medium} 
+              onChange={(e) => setAdmissionForm(prev => ({ ...prev, medium: e.target.value }))} 
+              options={[
+                { value: 'English', label: 'English Medium' },
+                { value: 'Hindi', label: 'Hindi Medium' },
+                { value: 'Telugu', label: 'Telugu Medium' },
+                { value: 'Tamil', label: 'Tamil Medium' },
+                { value: 'Spanish', label: 'Spanish Medium' },
+                { value: 'French', label: 'French Medium' }
               ]}
             />
           </div>
